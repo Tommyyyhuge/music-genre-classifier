@@ -1,14 +1,11 @@
-from torch.utils.data import DataLoader
 from datasets import load_dataset
 
 
-def get_dataloaders(batch_size: int = 32, num_workers: int = 4):
-    """Load CCMUSIC dataset and return train/val/test DataLoaders.
+def load_splits():
+    """Load CCMUSIC dataset and return train/val/test splits as HF Dataset objects.
 
-    The dataset provides spectrogram images as PIL Images.
-    Training and validation DataLoaders are returned with their
-    raw data; transforms are applied in the training loop via
-    the transforms module to allow per-batch augmentations (Mixup).
+    Returns raw HuggingFace Dataset objects (not PyTorch DataLoaders).
+    The Trainer handles batching manually to support per-batch Mixup.
     """
     dataset = load_dataset("ccmusic-database/music_genre")
 
