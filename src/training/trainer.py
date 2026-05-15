@@ -56,11 +56,8 @@ class Trainer:
         self.writer = SummaryWriter(log_dir=str(config.log_dir))
         config.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-        self.best_val_loss = float("inf")
-        self.best_model_state = None
-        self.epochs_no_improve = 0
-
-    def _transform_batch(self, images, transform):
+    @staticmethod
+    def _transform_batch(images, transform):
         """Apply transform to a list of PIL images, return tensor (B, 1, H, W)."""
         batch = torch.stack([transform(img) for img in images])
         return batch
@@ -110,6 +107,7 @@ class Trainer:
 
             optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             optimizer.step()
 
             total_loss += loss.item() * len(labels)
@@ -118,6 +116,8 @@ class Trainer:
                 "acc": f"{total_correct / total_samples:.4f}",
             })
 
+        if total_samples == 0:
+            return 0.0, 0.0
         return total_loss / total_samples, total_correct / total_samples
 
     @torch.no_grad()
@@ -147,12 +147,19 @@ class Trainer:
             total_correct += (preds == labels).sum().item()
             total_samples += len(labels)
 
+        if total_samples == 0:
+            return 0.0, 0.0
         val_loss = total_loss / total_samples
         val_acc = total_correct / total_samples
         return val_loss, val_acc
 
     def train(self, optimizer, criterion, scheduler=None):
         patience = self.config.early_stop_patience
+
+        # Reset early-stopping state for fresh training run
+        self.best_val_loss = float("inf")
+        self.best_model_state = None
+        self.epochs_no_improve = 0
 
         for epoch in range(1, self.config.epochs + 1):
             train_loss, train_acc = self._train_epoch(optimizer, criterion, epoch)
@@ -169,6 +176,7 @@ class Trainer:
             self.writer.add_scalar("Loss/val", val_loss, epoch)
             self.writer.add_scalar("Acc/train", train_acc, epoch)
             self.writer.add_scalar("Acc/val", val_acc, epoch)
+            self.writer.flush()
 
             print(
                 f"Epoch {epoch}: train_loss={train_loss:.4f}, train_acc={train_acc:.4f}, "
