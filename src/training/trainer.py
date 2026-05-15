@@ -12,8 +12,8 @@ from src.data.transforms import (
     SpecAugment,
     mixup_data,
     mixup_loss,
-    collate_fn,
 )
+from src.data.dataset import collate_fn
 
 
 def _get_logits(output):

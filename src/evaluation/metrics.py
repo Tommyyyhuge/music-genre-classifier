@@ -9,7 +9,8 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from src.data.transforms import get_eval_transforms, collate_fn
+from src.data.transforms import get_eval_transforms
+from src.data.dataset import collate_fn
 
 
 @torch.no_grad()
