@@ -1,0 +1,10 @@
+data/
+checkpoints/
+logs/
+__pycache__/
+*.pyc
+.DS_Store
+*.pt
+*.pth
+.venv/
+venv/
