@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrainConfig:
     """AST fine-tuning configuration."""
     model_name: str = "MIT/ast-finetuned-audioset-10-epochs-0.4593"
@@ -30,7 +30,7 @@ class TrainConfig:
     mixup_alpha: float = 0.5
 
 
-@dataclass
+@dataclass(frozen=True)
 class BaselineConfig:
     """ResNet50 baseline configuration."""
     model_name: str = "resnet50"
@@ -54,7 +54,7 @@ class BaselineConfig:
 
 
 # Genre label names (Level 3, 16 classes, 0-indexed order)
-GENRE_NAMES = [
+GENRE_NAMES: tuple[str, ...] = (
     "Symphony",
     "Opera",
     "Solo",
@@ -71,4 +71,4 @@ GENRE_NAMES = [
     "Uplifting_anthemic_rock",
     "Soft_rock",
     "Acoustic_pop",
-]
+)
