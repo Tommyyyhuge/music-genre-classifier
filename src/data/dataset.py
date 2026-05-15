@@ -1,3 +1,5 @@
+import torch
+from PIL import Image
 from datasets import load_dataset
 
 
@@ -23,14 +25,11 @@ def get_label_names(train_data):
 
 def collate_fn(batch):
     """Custom collate: extract mel images and thr_level_label from raw HF samples."""
-    import torch
-    from PIL import Image
-
     images = []
     labels = []
     for item in batch:
         mel_img = item["mel"]
-        if not isinstance(mel_img, Image.Image):
+        if isinstance(mel_img, Image.Image):
             mel_img = mel_img.convert("RGB")
         images.append(mel_img)
         labels.append(item["thr_level_label"])
