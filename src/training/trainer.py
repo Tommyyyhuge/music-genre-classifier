@@ -34,12 +34,14 @@ def _model_forward(model, x):
     """Call model forward with correct argument format.
 
     HF models need keyword arg `input_values`; timm models accept positional tensor.
+
+    AST expects 3D input (B, H, W) — its PatchEmbeddings adds the channel dim via
+    unsqueeze(1). Our pipeline produces 4D (B, 1, H, W), so we squeeze dim 1.
     """
     if _is_hf_model(model):
-        print(f"[DEBUG] _model_forward HF: x.shape={x.shape}")
-        # Bypass HF __call__ dispatch, call forward() directly
-        result = model.forward(input_values=x)
-        return result
+        if x.dim() == 4 and x.size(1) == 1:
+            x = x.squeeze(1)
+        return model.forward(input_values=x)
     return model(x)
 
 
@@ -159,7 +161,7 @@ class Trainer:
             x = x.to(self.device)
             labels = labels.to(self.device)
 
-            output = self.model(x)
+            output = _model_forward(self.model, x)
             logits = _get_logits(output)
             loss = criterion(logits, labels)
             preds = logits.argmax(dim=1)

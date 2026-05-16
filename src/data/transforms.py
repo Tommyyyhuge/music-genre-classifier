@@ -3,11 +3,12 @@ from torchvision import transforms
 import numpy as np
 
 
-def _base_transforms(image_size: int = 224):
+def _base_transforms(image_size: int | tuple = 224):
     """Shared transforms: grayscale, resize, to tensor, normalize to [-1, 1]."""
+    size = image_size if isinstance(image_size, tuple) else (image_size, image_size)
     return transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
-        transforms.Resize((image_size, image_size)),
+        transforms.Resize(size),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5], std=[0.5]),
     ])

@@ -7,9 +7,9 @@ class TrainConfig:
     """AST fine-tuning configuration."""
     model_name: str = "MIT/ast-finetuned-audioset-10-10-0.4593"
     num_classes: int = 16
-    image_size: int = 224
+    image_size: tuple = (128, 1024)
 
-    batch_size: int = 32
+    batch_size: int = 12
     epochs: int = 30
     lr_backbone: float = 5e-5
     lr_head: float = 5e-4
