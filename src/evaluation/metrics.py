@@ -13,6 +13,16 @@ from src.data.transforms import get_eval_transforms
 from src.data.dataset import collate_fn
 
 
+def _is_hf_model(model):
+    return hasattr(model, "config") and hasattr(model.config, "model_type")
+
+
+def _model_forward(model, x):
+    if _is_hf_model(model):
+        return model(input_values=x)
+    return model(x)
+
+
 @torch.no_grad()
 def evaluate_model(model, test_data, config, device, label_names=None):
     """Run full evaluation on test set.
@@ -33,7 +43,7 @@ def evaluate_model(model, test_data, config, device, label_names=None):
         images, labels = collate_fn(batch_items)
 
         x = torch.stack([transform(img) for img in images]).to(device)
-        output = model(x)
+        output = _model_forward(model, x)
         logits = output.logits if hasattr(output, "logits") else output
         preds = logits.argmax(dim=1).cpu().numpy()
 

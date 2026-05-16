@@ -25,6 +25,21 @@ def _get_logits(output):
     return output.logits if hasattr(output, "logits") else output
 
 
+def _is_hf_model(model):
+    """Check if model is a HuggingFace transformers model."""
+    return hasattr(model, "config") and hasattr(model.config, "model_type")
+
+
+def _model_forward(model, x):
+    """Call model forward with correct argument format.
+
+    HF models need keyword arg `input_values`; timm models accept positional tensor.
+    """
+    if _is_hf_model(model):
+        return model(input_values=x)
+    return model(x)
+
+
 class Trainer:
     """Generic trainer for music genre classification models."""
 
@@ -89,7 +104,7 @@ class Trainer:
             # Mixup
             if self.use_mixup:
                 x, y_a, y_b, lam = mixup_data(x, labels, alpha=self.config.mixup_alpha)
-                output = self.model(x)
+                output = _model_forward(self.model, x)
                 logits = _get_logits(output)
                 loss = mixup_loss(criterion, logits, y_a, y_b, lam)
                 preds = logits.argmax(dim=1)
@@ -97,7 +112,7 @@ class Trainer:
                     lam * (preds == y_a).float() + (1 - lam) * (preds == y_b).float()
                 ).sum().item()
             else:
-                output = self.model(x)
+                output = _model_forward(self.model, x)
                 logits = _get_logits(output)
                 loss = criterion(logits, labels)
                 preds = logits.argmax(dim=1)

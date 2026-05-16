@@ -50,7 +50,7 @@ class GenrePredictor:
 
         x = self.transform(mel_img).unsqueeze(0).to(self.device)
         with torch.no_grad():
-            output = self.model(x)
+            output = self.model(input_values=x)
             logits = _get_logits(output)
             probs = torch.softmax(logits, dim=1)[0]
 
@@ -82,7 +82,7 @@ class GenrePredictor:
 
             x = self.transform(mel_img).unsqueeze(0).to(self.device)
             with torch.no_grad():
-                output = self.model(x)
+                output = self.model(input_values=x)
                 logits = _get_logits(output).cpu()
             all_logits.append(logits)
 
