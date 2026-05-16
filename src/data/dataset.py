@@ -1,41 +1,61 @@
 import io
+import os
+import glob
 import torch
 from PIL import Image
+from datasets import Dataset, load_dataset
 
 
 def load_splits():
-    """Load CCMUSIC dataset from ModelScope with HuggingFace fallback.
+    """Load CCMUSIC dataset from ModelScope cache or fallback HuggingFace.
 
     Returns sequence-like objects supporting __len__ and integer indexing.
     The Trainer handles batching manually to support per-batch Mixup.
     """
+    # Step 1: trigger ModelScope download
     try:
         from modelscope.msdatasets import MsDataset
-        print("Loading from ModelScope...")
-        train_data = MsDataset.load(
+        print("Checking ModelScope cache...")
+        MsDataset.load(
             "ccmusic-database/music_genre", split="train", trust_remote_code=True
         )
-        val_data = MsDataset.load(
-            "ccmusic-database/music_genre", split="validation", trust_remote_code=True
-        )
-        test_data = MsDataset.load(
-            "ccmusic-database/music_genre", split="test", trust_remote_code=True
-        )
-        print(
-            f"Loaded: train={len(train_data)}, "
-            f"val={len(val_data)}, test={len(test_data)}"
-        )
-        return train_data, val_data, test_data
-    except Exception as e:
-        print(f"ModelScope failed ({e}), falling back to HuggingFace...")
+    except Exception:
+        pass
 
-    from datasets import load_dataset
-    dataset = load_dataset("ccmusic-database/music_genre")
-    print(
-        f"Loaded: train={len(dataset['train'])}, "
-        f"val={len(dataset['validation'])}, test={len(dataset['test'])}"
+    # Step 2: find and load arrow files from ModelScope cache
+    cache_base = os.path.expanduser("~/.cache/modelscope/hub/datasets")
+    pattern = os.path.join(
+        cache_base, "ccmusic-database___music_genre",
+        "**", "music_genre-train.arrow",
     )
-    return dataset["train"], dataset["validation"], dataset["test"]
+    matches = glob.glob(pattern, recursive=True)
+
+    if matches:
+        data_dir = os.path.dirname(matches[0])
+        print(f"Loading from ModelScope cache: {data_dir}")
+        import pyarrow as pa
+
+        def _read_arrow(name):
+            path = os.path.join(data_dir, f"music_genre-{name}.arrow")
+            with pa.memory_map(path) as source:
+                with pa.ipc.open_stream(source) as reader:
+                    return Dataset(reader.read_all())
+
+        train_data = _read_arrow("train")
+        val_data = _read_arrow("validation")
+        test_data = _read_arrow("test")
+    else:
+        print("Falling back to HuggingFace...")
+        dataset = load_dataset("ccmusic-database/music_genre")
+        train_data = dataset["train"]
+        val_data = dataset["validation"]
+        test_data = dataset["test"]
+
+    print(
+        f"Loaded: train={len(train_data)}, "
+        f"val={len(val_data)}, test={len(test_data)}"
+    )
+    return train_data, val_data, test_data
 
 
 def _to_pil(image_value):
