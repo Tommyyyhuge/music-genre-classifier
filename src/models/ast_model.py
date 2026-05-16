@@ -6,7 +6,7 @@ def build_ast_model(model_name: str, num_classes: int, device: torch.device):
     """Load AST model with AudioSet pretrained weights, replace classifier head.
 
     Args:
-        model_name: HuggingFace model ID (e.g. "MIT/ast-finetuned-audioset-10-epochs-0.4593")
+        model_name: HuggingFace model ID (e.g. "MIT/ast-finetuned-audioset-10-10-0.4593")
         num_classes: Number of target classes (16)
         device: torch device
 

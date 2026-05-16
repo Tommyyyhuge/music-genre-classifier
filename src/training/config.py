@@ -5,7 +5,7 @@ from pathlib import Path
 @dataclass(frozen=True)
 class TrainConfig:
     """AST fine-tuning configuration."""
-    model_name: str = "MIT/ast-finetuned-audioset-10-epochs-0.4593"
+    model_name: str = "MIT/ast-finetuned-audioset-10-10-0.4593"
     num_classes: int = 16
     image_size: int = 224
 

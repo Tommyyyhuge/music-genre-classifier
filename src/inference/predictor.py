@@ -19,7 +19,7 @@ class GenrePredictor:
     def __init__(self, checkpoint_path: str, device: str = "cpu"):
         self.device = torch.device(device)
         self.model = build_ast_model(
-            "MIT/ast-finetuned-audioset-10-epochs-0.4593",
+            "MIT/ast-finetuned-audioset-10-10-0.4593",
             num_classes=16,
             device=self.device,
         )
