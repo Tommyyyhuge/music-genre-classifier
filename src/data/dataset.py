@@ -1,8 +1,9 @@
 import io
 import os
+import glob
 import torch
 from PIL import Image
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 
 
 def load_splits():
@@ -11,37 +12,49 @@ def load_splits():
     Returns sequence-like objects supporting __len__ and integer indexing.
     The Trainer handles batching manually to support per-batch Mixup.
     """
-    # Step 1: ensure data is downloaded via ModelScope
+    # Step 1: trigger ModelScope download if not cached
     try:
         from modelscope.msdatasets import MsDataset
-        print("Downloading from ModelScope (if not cached)...")
+        print("Checking ModelScope cache...")
         MsDataset.load(
             "ccmusic-database/music_genre", split="train", trust_remote_code=True
         )
-    except Exception as e:
-        print(f"  (ModelScope load attempt: {e})")
+    except Exception:
+        pass  # download may succeed even if as_dataset() fails
 
-    # Step 2: load from ModelScope cache using HF datasets
-    cache_root = os.path.expanduser("~/.cache/modelscope/hub/datasets")
-    script_dir = None
-    if os.path.isdir(cache_root):
-        for root, dirs, files in os.walk(cache_root):
-            if "music_genre.py" in files and "ccmusic" in root:
-                script_dir = root
-                break
+    # Step 2: find arrow files in ModelScope cache
+    cache_base = os.path.expanduser("~/.cache/modelscope/hub/datasets")
+    pattern = os.path.join(
+        cache_base,
+        "ccmusic-database___music_genre", "**", "music_genre-train.arrow",
+    )
+    matches = glob.glob(pattern, recursive=True)
 
-    if script_dir:
-        print(f"Loading from ModelScope cache: {script_dir}")
-        dataset = load_dataset(script_dir, trust_remote_code=True)
+    if matches:
+        data_dir = os.path.dirname(matches[0])
+        print(f"Loading from ModelScope cache: {data_dir}")
+        import pyarrow as pa
+
+        def _read_arrow(name):
+            path = os.path.join(data_dir, f"music_genre-{name}.arrow")
+            with pa.ipc.open_file(path) as f:
+                return Dataset(f.read_all())
+
+        train_data = _read_arrow("train")
+        val_data = _read_arrow("validation")
+        test_data = _read_arrow("test")
     else:
         print("Falling back to HuggingFace...")
         dataset = load_dataset("ccmusic-database/music_genre")
+        train_data = dataset["train"]
+        val_data = dataset["validation"]
+        test_data = dataset["test"]
 
     print(
-        f"Loaded: train={len(dataset['train'])}, "
-        f"val={len(dataset['validation'])}, test={len(dataset['test'])}"
+        f"Loaded: train={len(train_data)}, "
+        f"val={len(val_data)}, test={len(test_data)}"
     )
-    return dataset["train"], dataset["validation"], dataset["test"]
+    return train_data, val_data, test_data
 
 
 def _to_pil(image_value):
