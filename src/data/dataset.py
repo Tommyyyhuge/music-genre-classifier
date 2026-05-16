@@ -13,13 +13,13 @@ def load_splits():
         from modelscope.msdatasets import MsDataset
         print("Loading from ModelScope...")
         train_data = MsDataset.load(
-            "ccmusic-database/music_genre", split="train"
+            "ccmusic-database/music_genre", split="train", trust_remote_code=True
         )
         val_data = MsDataset.load(
-            "ccmusic-database/music_genre", split="validation"
+            "ccmusic-database/music_genre", split="validation", trust_remote_code=True
         )
         test_data = MsDataset.load(
-            "ccmusic-database/music_genre", split="test"
+            "ccmusic-database/music_genre", split="test", trust_remote_code=True
         )
         print(
             f"Loaded: train={len(train_data)}, "
