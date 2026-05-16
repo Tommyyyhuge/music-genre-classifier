@@ -36,12 +36,9 @@ def _model_forward(model, x):
     HF models need keyword arg `input_values`; timm models accept positional tensor.
     """
     if _is_hf_model(model):
-        print(f"[DEBUG] _model_forward HF: x.shape={x.shape}, dtype={x.dtype}")
-        if x.dim() == 5:
-            print(f"[DEBUG] x is 5D! Squeezing...")
-            x = x.squeeze(1)
-            print(f"[DEBUG] after squeeze: {x.shape}")
-        result = model(input_values=x)
+        print(f"[DEBUG] _model_forward HF: x.shape={x.shape}")
+        # Bypass HF __call__ dispatch, call forward() directly
+        result = model.forward(input_values=x)
         return result
     return model(x)
 
