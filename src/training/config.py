@@ -20,8 +20,8 @@ class TrainConfig:
 
     num_workers: int = 4
 
-    checkpoint_dir: Path = Path("./checkpoints")
-    log_dir: Path = Path("./logs")
+    checkpoint_dir: Path = Path("./checkpoints/ast")
+    log_dir: Path = Path("./logs/ast")
 
     use_specaugment: bool = True
     time_mask_param: int = 10
@@ -45,8 +45,8 @@ class BaselineConfig:
 
     num_workers: int = 4
 
-    checkpoint_dir: Path = Path("./checkpoints")
-    log_dir: Path = Path("./logs")
+    checkpoint_dir: Path = Path("./checkpoints/resnet")
+    log_dir: Path = Path("./logs/resnet")
 
     use_specaugment: bool = True
     time_mask_param: int = 10

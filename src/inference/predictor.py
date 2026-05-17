@@ -30,7 +30,7 @@ class GenrePredictor:
 
         self.transform = transforms.Compose([
             transforms.Grayscale(num_output_channels=1),
-            transforms.Resize((224, 224)),
+            transforms.Resize((128, 1024)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.5], std=[0.5]),
         ])
@@ -49,6 +49,7 @@ class GenrePredictor:
         mel_img = Image.fromarray((mel_norm * 255).astype(np.uint8))
 
         x = self.transform(mel_img).unsqueeze(0).to(self.device)
+        x = x.squeeze(1)  # (B, 1, H, W) -> (B, H, W) as AST expects
         with torch.no_grad():
             output = self.model(input_values=x)
             logits = _get_logits(output)
@@ -81,6 +82,7 @@ class GenrePredictor:
             mel_img = Image.fromarray((mel_norm * 255).astype(np.uint8))
 
             x = self.transform(mel_img).unsqueeze(0).to(self.device)
+            x = x.squeeze(1)  # (B, 1, H, W) -> (B, H, W) as AST expects
             with torch.no_grad():
                 output = self.model(input_values=x)
                 logits = _get_logits(output).cpu()
@@ -103,7 +105,7 @@ class GenrePredictor:
         return self.predict_segment(y, sr)[2]
 
 
-def predict(audio_path: str, checkpoint_path: str = "./checkpoints/best_model.pt",
+def predict(audio_path: str, checkpoint_path: str = "./checkpoints/ast/best_model.pt",
             device: str = "cpu") -> list:
     """Convenience function for quick inference."""
     predictor = GenrePredictor(checkpoint_path, device)

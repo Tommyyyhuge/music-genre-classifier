@@ -19,6 +19,8 @@ def _is_hf_model(model):
 
 def _model_forward(model, x):
     if _is_hf_model(model):
+        if x.dim() == 4 and x.size(1) == 1:
+            x = x.squeeze(1)
         return model(input_values=x)
     return model(x)
 
